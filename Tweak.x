@@ -255,7 +255,12 @@ static void batchSwizzlingOnClass(Class cls, NSArray<NSString*>*origSelectors, I
     if ([BHTManager HidePromoted] && [tweet respondsToSelector:@selector(isPromoted)] && [tweet performSelector:@selector(isPromoted)]) {
         [_orig setHidden:YES];
     }
-    
+
+    if ([BHTManager HideReposts] && [tweet isKindOfClass:%c(T1URTTimelineStatusItemViewModel)]) {
+        if (((T1URTTimelineStatusItemViewModel *)tweet).isRetweet) {
+            [_orig setHidden:YES];
+        }
+    }
     
     if ([self.adDisplayLocation isEqualToString:@"PROFILE_TWEETS"]) {
         if ([BHTManager hideWhoToFollow]) {
@@ -315,17 +320,23 @@ static void batchSwizzlingOnClass(Class cls, NSArray<NSString*>*origSelectors, I
             }
         }
     }
-    
+
     return _orig;
 }
 - (double)tableView:(id)arg1 heightForRowAtIndexPath:(id)arg2 {
     id tweet = [self itemAtIndexPath:arg2];
     NSString *class_name = NSStringFromClass([tweet classForCoder]);
-    
+
     if ([BHTManager HidePromoted] && [tweet respondsToSelector:@selector(isPromoted)] && [tweet performSelector:@selector(isPromoted)]) {
         return 0;
     }
-    
+
+    if ([BHTManager HideReposts] && [tweet isKindOfClass:%c(T1URTTimelineStatusItemViewModel)]) {
+        if (((T1URTTimelineStatusItemViewModel *)tweet).isRetweet) {
+            return 0;
+        }
+    }
+
     if ([self.adDisplayLocation isEqualToString:@"PROFILE_TWEETS"]) {
         if ([BHTManager hideWhoToFollow]) {
             if ([class_name isEqualToString:@"T1URTTimelineUserItemViewModel"] || [class_name isEqualToString:@"T1TwitterSwift.URTTimelineCarouselViewModel"] || [class_name isEqualToString:@"TwitterURT.URTModuleHeaderViewModel"] || [class_name isEqualToString:@"TwitterURT.URTModuleFooterViewModel"]) {
@@ -385,7 +396,7 @@ static void batchSwizzlingOnClass(Class cls, NSArray<NSString*>*origSelectors, I
             }
         }
     }
-    
+
     return %orig;
 }
 - (double)tableView:(id)arg1 heightForHeaderInSection:(long long)arg2 {
@@ -405,6 +416,7 @@ static void batchSwizzlingOnClass(Class cls, NSArray<NSString*>*origSelectors, I
 }
 %end
 
+// MARK: Hide Reposts
 // MARK: DM download
 %hook T1DirectMessageEntryMediaCell
 %property (nonatomic, strong) JGProgressHUD *hud;
